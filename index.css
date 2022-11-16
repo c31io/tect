@@ -1,0 +1,20 @@
+* {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+body {
+    -webkit-app-region:drag;
+    color: rgb(0, 0, 0);
+    border: 1px solid #41557b;
+}
+
+#info-bar {
+    height: 20px;
+}
+
+#sensor {
+    border: 1px solid #4e7b41;
+}
