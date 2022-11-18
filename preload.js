@@ -1,3 +1,9 @@
+const { contextBridge, ipcRenderer } = require('electron')
+
+contextBridge.exposeInMainWorld('electronAPI', {
+    newWindow: () => ipcRenderer.send('new-window')
+})
+
 const replaceText = (selector, text) => {
     const element = document.getElementById(selector)
     if (element) element.innerText = text
@@ -16,9 +22,9 @@ window.addEventListener('resize', () => {
     doSize()
 })
 
-const doSize = () => {
-    const sh = window.outerHeight - 24
-    replaceText("sw", window.outerWidth - 4)
+function doSize() {
+    const sh = window.outerHeight - 22
+    replaceText("sw", window.outerWidth - 2)
     replaceText("sh", sh)
     setStyle("sensor", "height", `${sh}px`)
 }

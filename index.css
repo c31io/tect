@@ -5,16 +5,20 @@
     box-sizing: border-box;
 }
 
-body {
-    -webkit-app-region:drag;
-    color: rgb(0, 0, 0);
-    border: 1px solid #41557b;
-}
-
 #info-bar {
     height: 20px;
+    color: #f56de3ce;
 }
 
 #sensor {
-    border: 1px solid #4e7b41;
+    border: 1px solid #7ce75fce;
+    -webkit-app-region: drag;
+}
+
+#btn {
+    background-color: #00000000;
+    border: none;
+    color: white;
+    display: inline-block;
+    font-size: 20px;
 }

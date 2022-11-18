@@ -1,15 +1,14 @@
-const { app, BrowserWindow, screen, desktopCapturer } = require('electron')
+const { app, BrowserWindow, screen, desktopCapturer, ipcMain } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
 
-let win
 function createWindow() {
     const factor = screen.getPrimaryDisplay().scaleFactor
 
-    win = new BrowserWindow({
-        width: 104 / factor,
-        height: 124 / factor,
+    const win = new BrowserWindow({
+        width: 102 / factor,
+        height: 122 / factor,
         frame: false,
         transparent: true,
         webPreferences: {
@@ -27,7 +26,7 @@ function createWindow() {
     win.setFullScreenable(false)
     win.setHasShadow(false)
     win.setMinimizable(false)
-    win.setMinimumSize(104, 124)
+    win.setMinimumSize(102, 122)
 
     // win.webContents.openDevTools()
 }
@@ -35,6 +34,8 @@ function createWindow() {
 
 app.whenReady().then(() => {
     createWindow()
+
+    ipcMain.on('new-window', createWindow)
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -58,15 +59,17 @@ app.whenReady().then(() => {
             // Using the crop of full screenshot.
             types: ['screen'], thumbnailSize: screen.getPrimaryDisplay().size
         }).then(sources => {
-            for (const s of sources) {
-                const fw = BrowserWindow.getAllWindows()[0]
-                const img = s.thumbnail.crop(fw.getBounds())
-                fs.writeFile(`test${count}.png`, img.toPNG(), (err) => {
-                    if (err) throw err
-                    console.log('Image Saved')
-                    count++
-                })
+            for (const source of sources) {
+                const fullScreen = source.thumbnail
+                for (const window of BrowserWindow.getAllWindows()) {
+                    const img = fullScreen.crop(window.getBounds())
+                    fs.writeFile(`test${count}_${window.id}.png`, img.toPNG(), (err) => {
+                        if (err) throw err
+                        console.log('Image Saved')
+                        count++
+                    })
+                }
             }
         })
-    }, 1000)
+    }, 10000)
 })
