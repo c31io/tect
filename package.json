@@ -1,10 +1,10 @@
 {
   "name": "tect",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "repository": "https://github.com/c31io/tect.git",
   "author": "c31io",
-  "description": "electron-tensorflow.js",
+  "description": "electron-tensorflow.js-mobilenet",
   "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.3",
@@ -23,6 +23,8 @@
     "@tensorflow/tfjs": "^4.0.0",
     "@tensorflow/tfjs-node": "^4.0.0",
     "electron-squirrel-startup": "^1.0.0",
-    "seedrandom": "^3.0.5"
+    "seedrandom": "^3.0.5",
+    "minimatch": "^3.0.5",
+    "got": "^11.8.5"
   }
 }
