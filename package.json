@@ -4,7 +4,7 @@
   "main": "index.js",
   "repository": "https://github.com/c31io/tect.git",
   "author": "c31io",
-  "description": "electron-wasm-tensorflow",
+  "description": "electron-tensorflow.js",
   "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.3",
