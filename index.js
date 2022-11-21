@@ -86,7 +86,7 @@ app.whenReady().then(() => {
                     const ts = tf.tensor(du)
                         .reshape([-1, 224, 224, 4])
                         .slice([0, 0, 0, 0], [-1, 224, 224, 3])
-                        .toFloat().div(tf.scalar(255))
+                        .toFloat().div(tf.scalar(255)).reverse(3)
                     // ts.print()
 
                     const predictions = model.predict(ts)
