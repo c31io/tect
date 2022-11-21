@@ -7,7 +7,8 @@
 
 #info-bar {
     height: 20px;
-    color: #f56de3ce;
+    color: rgb(240, 15, 210);
+    font-weight: bold;
 }
 
 #sensor {
@@ -18,7 +19,7 @@
 #btn {
     background-color: #00000000;
     border: none;
-    color: white;
+    color: rgb(30, 57, 212);
     display: inline-block;
     font-size: 20px;
 }

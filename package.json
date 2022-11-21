@@ -20,6 +20,9 @@
     "make": "electron-forge make"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "@tensorflow/tfjs": "^4.0.0",
+    "@tensorflow/tfjs-node": "^4.0.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "seedrandom": "^3.0.5"
   }
 }

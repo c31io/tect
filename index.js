@@ -2,6 +2,9 @@ const { app, BrowserWindow, screen, desktopCapturer, ipcMain } = require('electr
 const path = require('path')
 const fs = require('fs')
 
+const tf = require('@tensorflow/tfjs')
+require('@tensorflow/tfjs-backend-webgl')
+const tfnode = require('@tensorflow/tfjs-node')
 
 function createWindow() {
     const factor = screen.getPrimaryDisplay().scaleFactor
@@ -32,6 +35,14 @@ function createWindow() {
 }
 
 
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
+})
+
+const saveTarget = false
+let count = 0
 app.whenReady().then(() => {
     createWindow()
 
@@ -42,20 +53,17 @@ app.whenReady().then(() => {
             createWindow()
         }
     })
-})
-
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit()
-    }
-})
-
-let count = 0
-app.whenReady().then(() => {
-    setInterval(() => {
+}).then(async () => {
+    const handler = tfnode.io.fileSystem(path.join(__dirname, 'models/mobilenet/web_model/model.json'))
+    const model = await tf.loadGraphModel(handler)
+    console.log("Model loaded")
+    const lablesTXT = fs.readFileSync(path.join(__dirname, 'models/mobilenet/labels.txt'), 'utf8', (err, data) => {
+        if (err) { console.error(err) }
+    })
+    const labels = lablesTXT.split(/\r?\n/);
+    setInterval(async () => {
         desktopCapturer.getSources({
-            // Frameless window can't be detected by type 'window' as of now.
+            // Frameless windows can't be detected by the type 'window' as of now.
             // Using the crop of full screenshot.
             types: ['screen'], thumbnailSize: screen.getPrimaryDisplay().size
         }).then(sources => {
@@ -63,13 +71,39 @@ app.whenReady().then(() => {
                 const fullScreen = source.thumbnail
                 for (const window of BrowserWindow.getAllWindows()) {
                     const img = fullScreen.crop(window.getBounds())
-                    fs.writeFile(`test${count}_${window.id}.png`, img.toPNG(), (err) => {
-                        if (err) throw err
-                        console.log('Image Saved')
-                        count++
+                    const imgSize = img.getSize()
+                    const w = imgSize.width - 2
+                    const h = imgSize.height - 22
+                    const target = img.crop({
+                        x: 1,
+                        y: 21,
+                        width: w,
+                        height: h
                     })
+
+                    // Bitmap layout is not consistent across platforms.
+                    const du = target.resize({ width: 224, height: 224 }).toBitmap()
+                    const ts = tf.tensor(du)
+                        .reshape([-1, 224, 224, 4])
+                        .slice([0, 0, 0, 0], [-1, 224, 224, 3])
+                        .toFloat().div(tf.scalar(255))
+                    // ts.print()
+
+                    const predictions = model.predict(ts)
+                    const label = tf.argMax(predictions, 1).dataSync()[0]
+
+                    window.webContents.send('update-label', labels[label])
+                    console.log(`${window.id}: ${label} ${labels[label]}`)
+
+
+                    if (saveTarget)
+                        fs.writeFile(`test${count}_${window.id}.png`, target.toPNG(), (err) => {
+                            if (err) throw err
+                            console.log('Image Saved')
+                            count++
+                        })
                 }
             }
         })
-    }, 10000)
+    }, 1000)
 })
