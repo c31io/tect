@@ -54,10 +54,12 @@ app.whenReady().then(() => {
         }
     })
 }).then(async () => {
-    const handler = tfnode.io.fileSystem(path.join(__dirname, 'models/mobilenet/web_model/model.json'))
-    const model = await tf.loadGraphModel(handler)
+    const modelPath = 'models/biochip'
+    const modelImageSize = 160
+    const handler = tfnode.io.fileSystem(path.join(__dirname, modelPath, 'web_model/model.json'))
+    const model = await tf.loadLayersModel(handler)
     console.log("Model loaded")
-    const lablesTXT = fs.readFileSync(path.join(__dirname, 'models/mobilenet/labels.txt'), 'utf8', (err, data) => {
+    const lablesTXT = fs.readFileSync(path.join(__dirname, modelPath, 'labels.txt'), 'utf8', (err, data) => {
         if (err) { console.error(err) }
     })
     const labels = lablesTXT.split(/\r?\n/);
@@ -82,17 +84,22 @@ app.whenReady().then(() => {
                     })
 
                     // Bitmap layout is not consistent across platforms.
-                    const du = target.resize({ width: 224, height: 224 }).toBitmap()
+                    const du = target.resize({ width: modelImageSize, height: modelImageSize }).toBitmap()
                     const ts = tf.tensor(du)
-                        .reshape([-1, 224, 224, 4])
-                        .slice([0, 0, 0, 0], [-1, 224, 224, 3])
-                        .toFloat().div(tf.scalar(127.5)).sub(tf.scalar(1)).reverse(3)
+                        .reshape([-1, modelImageSize, modelImageSize, 4])
+                        .slice([0, 0, 0, 0], [-1, modelImageSize, modelImageSize, 3])
+                        .toFloat().reverse(3)
                     // ts.print()
 
                     const predictions = model.predict(ts)
                     const label = tf.argMax(predictions, 1).dataSync()[0]
 
                     window.webContents.send('update-label', labels[label])
+                    pd = predictions.dataSync()
+                    console.log('clu', pd[0].toFixed(2))
+                    console.log('dis', pd[1].toFixed(2))
+                    console.log('dwc', pd[2].toFixed(2))
+                    console.log('wdr', pd[3].toFixed(2))
                     console.log(`${window.id}: ${label} ${labels[label]}`)
 
 
