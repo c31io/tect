@@ -7,19 +7,17 @@
 
 #info-bar {
     height: 20px;
-    color: rgb(240, 15, 210);
     font-weight: bold;
 }
 
 #sensor {
-    border: 1px solid #7ce75fce;
+    border: 1px solid #77dd77cc;
     -webkit-app-region: drag;
 }
 
-#btn {
+button {
     background-color: #00000000;
     border: none;
-    color: rgb(30, 57, 212);
     display: inline-block;
-    font-size: 20px;
+    font-size: 12px;
 }

@@ -2,10 +2,14 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
     newWindow: () => ipcRenderer.send('new-window'),
+    evaluate: () => ipcRenderer.send('evaluate'),
+    updateSize: (w, h) => ipcRenderer.send('update-size', w, h),
+    colorStat: (x) => ipcRenderer.send('color-stat', x),
+    selectFile: () => ipcRenderer.send('select-file'),
     updateLabel: (callback) => ipcRenderer.on('update-label', callback)
 })
 
-const setStyle = (selector, property, value) => {
+function setStyle(selector, property, value) {
     const element = document.getElementById(selector)
     if (element) element.style[property] = value
 }
@@ -19,7 +23,6 @@ window.addEventListener('resize', () => {
 })
 
 function doSize() {
-    const sh = window.outerHeight - 20
-    // replaceText('sensor-size', `${window.outerWidth-2}x${sh-2}`)
-    setStyle('sensor', 'height', `${sh}px`)
+    const sHeight = window.outerHeight - 20
+    setStyle('sensor', 'height', `${sHeight}px`)
 }
