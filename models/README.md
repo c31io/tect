@@ -14,14 +14,7 @@ Download `biochip.h5` in the release page.
 
 ## The labels
 
-At `.\mobilenet\labels.txt`
-
-    ✊
-    🖐
-    💧
-    ❓
-
-- ✊ clustered
-- 🖐 disperse
-- 💧 drop wo cell
-- ❓ wo drop
+- ✊ 0: clustered
+- 🖐 1: disperse
+- 💧 2: drop wo cell
+- ❓ 3: wo drop

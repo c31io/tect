@@ -1,16 +1,18 @@
-const { app, BrowserWindow, screen, desktopCapturer, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, screen, desktopCapturer, ipcMain, dialog, Notification } = require('electron')
 const path = require('path')
 const fs = require('fs')
-
+const { homedir } = require('os')
 const tf = require('@tensorflow/tfjs')
 require('@tensorflow/tfjs-backend-webgl')
 const tfnode = require('@tensorflow/tfjs-node')
 
+
 let curW = 102
 let curH = 122
-function createWindow() {
-    const factor = screen.getPrimaryDisplay().scaleFactor
+let factor
 
+function createWindow() {
+    factor = screen.getPrimaryDisplay().scaleFactor
     const win = new BrowserWindow({
         width: curW / factor,
         height: curH / factor,
@@ -23,9 +25,7 @@ function createWindow() {
             }
         }
     })
-
     win.loadFile('index.html')
-
     win.setAlwaysOnTop(true, 'screen')
     win.setFullScreenable(false)
     win.setHasShadow(false)
@@ -33,10 +33,12 @@ function createWindow() {
     win.setMinimumSize(102 / factor, 122 / factor)
 }
 
-function updateSize(_, w, h) {
+
+function updateSize(_event, w, h) {
     curW = w
     curH = h
 }
+
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -44,17 +46,17 @@ app.on('window-all-closed', () => {
     }
 })
 
-let count = 0
-let model, labels
+
+let model = null
+
 app.whenReady().then(() => {
     createWindow()
-
     ipcMain.on('new-window', createWindow)
     ipcMain.on('evaluate', evaluate)
     ipcMain.on('update-size', updateSize)
     ipcMain.on('select-file', selectFile)
+    ipcMain.on('save-file', saveFile)
     ipcMain.on('color-stat', colorStat)
-
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow()
@@ -64,19 +66,18 @@ app.whenReady().then(() => {
     const modelPath = 'models/biochip'
     const handler = tfnode.io.fileSystem(path.join(__dirname, modelPath, 'web_model/model.json'))
     model = await tf.loadLayersModel(handler)
-    console.log("Model loaded")
-    const lablesTXT = fs.readFileSync(path.join(__dirname, modelPath, 'labels.txt'), 'utf8', (err, data) => {
-        if (err) { console.error(err) }
-    })
-    labels = lablesTXT.split(/\r?\n/);
 })
+
 
 const today = new Date();
 const dd = String(today.getDate()).padStart(2, '0');
 const mm = String(today.getMonth() + 1).padStart(2, '0');
 const yyyy = today.getFullYear();
-const filename = yyyy + mm + dd + '.csv';
-let filePath = '%HOMEPATH%\\Desktop\\' + filename
+const filename = yyyy + '-' + mm + '-' + dd + '.csv';
+const defaultDirectory = path.join(homedir(), 'Documents/Tect')
+fs.mkdirSync(defaultDirectory, { recursive: true })
+let filePath = path.join(defaultDirectory, filename)
+
 function selectFile() {
     dialog.showOpenDialog({
         defaultPath: filePath,
@@ -88,9 +89,9 @@ function selectFile() {
     })
 }
 
+
 let result = null
-const logging = false
-const saveTarget = false
+
 async function evaluate() {
     const modelImageSize = 160
     desktopCapturer.getSources({
@@ -98,86 +99,147 @@ async function evaluate() {
         // Using the crop of full screenshot.
         types: ['screen'], thumbnailSize: screen.getPrimaryDisplay().size
     }).then(sources => {
-        for (const source of sources) {
-            const fullScreen = source.thumbnail
-            result = {}
-            for (const window of BrowserWindow.getAllWindows()) {
-                const img = fullScreen.crop(window.getBounds())
-                const imgSize = img.getSize()
-                const w = imgSize.width - 2
-                const h = imgSize.height - 22
-                const target = img.crop({
-                    x: 1,
-                    y: 21,
-                    width: w,
-                    height: h
-                })
-
-                // Bitmap layout is not consistent across platforms.
-                const du = target.resize({ width: modelImageSize, height: modelImageSize }).toBitmap()
-                const ts = tf.tensor(du)
-                    .reshape([-1, modelImageSize, modelImageSize, 4])
-                    .slice([0, 0, 0, 0], [-1, modelImageSize, modelImageSize, 3])
-                    .toFloat().reverse(3)
-                // ts.print()
-
-                const predictions = model.predict(ts)
-                const label = tf.argMax(predictions, 1).dataSync()[0]
-
-                window.webContents.send('update-label', labels[label])
-                pd = predictions.dataSync()
-                result[window.id] = [pd[0], pd[1], pd[2], pd[3]]
-
-                if (logging) {
-                    console.log(`${window.id}: ${label}`)
-                    console.log('clu', pd[0].toFixed(2))
-                    console.log('dis', pd[1].toFixed(2))
-                    console.log('dwc', pd[2].toFixed(2))
-                    console.log('wdr', pd[3].toFixed(2))
-                }
-                if (saveTarget)
-                    fs.writeFile(`test${count}_${window.id}.png`, target.toPNG(), (err) => {
-                        if (err) throw err
-                        console.log('Image Saved')
-                        count++
-                    })
-            }
+        const fullScreen = sources[0].thumbnail
+        result = {}
+        for (const window of BrowserWindow.getAllWindows()) {
+            const img = fullScreen.crop(window.getBounds())
+            const imgSize = img.getSize()
+            const target = img.crop({
+                x: Math.round(1 / factor),
+                y: Math.round(21 / factor),
+                width: Math.round(imgSize.width - 2 / factor),
+                height: Math.round(imgSize.height - 22 / factor)
+            })
+            // Bitmap layout is not consistent across platforms.
+            const du = target.resize({ width: modelImageSize, height: modelImageSize }).toBitmap()
+            const ts = tf.tensor(du)
+                .reshape([-1, modelImageSize, modelImageSize, 4])
+                .slice([0, 0, 0, 0], [-1, modelImageSize, modelImageSize, 3])
+                .toFloat().reverse(3) // explained in the colorStat()
+            // AI
+            const predictions = model.predict(ts)
+            const label = tf.argMax(predictions, 1).dataSync()[0]
+            // Update label & save result
+            window.webContents.send('update-label', label)
+            pd = predictions.dataSync()
+            result[window.id] = [pd[0], pd[1], pd[2], pd[3]]
         }
     })
 }
 
+
 let color1 = null
 let color2 = null
-function colorStat(_, colorx) {
-    colorx = colorx == 1 ? color1 : color2
-    colorx = {}
-    // hide windows
-    // screen shot
-    for (const window of BrowserWindow.getAllWindows()) {
-        // crop (width x2)
-        // add RGBs
-        // width height
-        // write colorx
+
+function colorStat(_event, color) {
+    let colorx
+    if (color == 1) {
+        color1 = {}
+        colorx = color1
+    } else {
+        color2 = {}
+        colorx = color2
     }
-    // show windows
+    for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send('set-frame', false)
+    }
+    // Hide frames and take screen shot
+    // Don't hide windows (Window animation)
+    setTimeout(() => {
+        desktopCapturer.getSources({
+            types: ['screen'], thumbnailSize: screen.getPrimaryDisplay().size
+        }).then(sources => {
+            const fullScreen = sources[0].thumbnail
+            for (const window of BrowserWindow.getAllWindows()) {
+                // crop (width x2)
+                const wideBounds = wideRectangle(window.getBounds())
+                const img = fullScreen.crop(wideBounds)
+                const ts = tf.tensor(img.toBitmap())
+                    .reshape([-1, 4]) // ABGR
+                    .slice([0, 0], [-1, 3]).reverse(1) // RGB
+                    .toFloat().div(tf.scalar(255)) // RGB normalized
+                // sum RGBs
+                const s = ts.sum(0).dataSync()
+                // write colorx: R,G,B,width,height
+                colorx[window.id] = [s[0], s[1], s[2], wideBounds.width, wideBounds.height]
+                // Show frames
+                window.webContents.send('set-frame', true)
+                window.webContents.send('check-icon', color)
+            }
+        })
+    }, 200)
 }
 
-function saveData() {
+
+function wideRectangle(rec) {
+    x = rec.x + 1 / factor
+    y = rec.y + 21 / factor
+    width = rec.width - 2 / factor
+    height = rec.height - 22 / factor
+    x = x - (width / 2) / factor
+    width = width * 2
+    return { x: Math.round(x),
+        y: Math.round(y),
+        width: Math.round(width),
+        height: Math.round(height) }
+}
+
+
+function saveFile() {
     // if any of color1/2 result is null notify & abort
+    if (color1 == null | color2 == null | result == null) {
+        new Notification({
+            title: 'Warning: data is not saved',
+            body: 'Missing data entry'
+        }).show()
+        return
+    }
+    // if they have different keys
+    if (!sameMembers(
+        Object.keys(color1),
+        Object.keys(color2),
+        Object.keys(result))) {
+        new Notification({
+            title: 'Error: windows have changed',
+            body: 'Data will be reset'
+        }).show()
+        color1 = color2 = result = null
+        for (const window of BrowserWindow.getAllWindows()) {
+            window.webContents.send('restore-icons')
+        }
+        return
+    }
     // append data to filePath with time
+    const t = timeISO()
+    for (const i of Object.keys(color1)) {
+        try {
+            fs.appendFileSync(filePath, [t, i, color1[i], color2[i], result[i]].flat().join(',') + '\n')
+        } catch (e) {
+            new Notification({
+                title: 'Error: cannot append to file',
+                body: filePath
+            }).show()
+            console.log(e)
+        }
+    }
     // set color1/2 result to null
+    color1 = color2 = result = null
+    for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send('restore-icons')
+    }
 }
 
-function sameMembers(arr1, arr2) {
+
+function sameMembers(arr1, arr2, arr3) {
     const set1 = new Set(arr1);
     const set2 = new Set(arr2);
+    const set3 = new Set(arr3);
     return arr1.every(item => set2.has(item)) &&
+        arr2.every(item => set3.has(item)) &&
         arr2.every(item => set1.has(item))
 }
 
-function timeISO() {
-    const d = new Date()
-    return d.toISOString()
-}
 
-//var size = Object.keys(myObj).length;
+function timeISO() {
+    return new Date().toISOString()
+}

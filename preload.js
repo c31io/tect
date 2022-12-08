@@ -6,7 +6,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateSize: (w, h) => ipcRenderer.send('update-size', w, h),
     colorStat: (x) => ipcRenderer.send('color-stat', x),
     selectFile: () => ipcRenderer.send('select-file'),
-    updateLabel: (callback) => ipcRenderer.on('update-label', callback)
+    saveFile: () => ipcRenderer.send('save-file'),
+    updateLabel: (callback) => ipcRenderer.on('update-label', callback),
+    checkIcon: (callback) => ipcRenderer.on('check-icon', callback),
+    restoreIcons: (callback) => ipcRenderer.on('restore-icons', callback),
+    setFrame: (callback) => ipcRenderer.on('set-frame', callback)
 })
 
 function setStyle(selector, property, value) {

@@ -1,16 +1,57 @@
-# Tect
+# Tect-biochip
 
-A Demo of Electron + TensorFlow.js + MobileNet
+➕🟩🔴🤖💾
 
-![Tect in action](tect.png)
+## Introduction
 
-Transparent, draggable, resizable, and multi-window
+### ➕ Add a new window
 
-[Picture source](https://wilderness-society.org/nature-does-not-need-us-we-need-nature/)
+- By the latest size
 
-## Getting Started
+### 🟩 Get sums on each RGB channels
 
-[Grab the MobileNet](models\README.md)
+- On click, the sensor border hides to capture a 2x wider view.
+- ✅ Done, click again to overwrite
+
+### 🔴 Same, the maximum intensity is 1
+
+- ⭕ Same
+
+### 🤖 AI
+
+- ✊ 0: clustered
+- 🖐 1: disperse
+- 💧 2: drop wo cell
+- ❓ 3: wo drop
+
+### 💾 Append to file
+
+- Save to `$HOME/Documents/Tect/yyyy-mm-dd.csv`
+- Right click to change the default path
+- It works only when you have ✅⭕ and the predictions by AI
+
+## CSV Schema
+
+Fields are seperated by commas.
+
+- Time when append in ISO format
+- Window ID
+- Sum of R channel from 🟩
+- Sum of G channel from 🟩
+- Sum of B channel from 🟩
+- Width from 🟩 (2x wider than the green border)
+- Height from 🟩
+- Sum of R channel from 🔴
+- Sum of G channel from 🔴
+- Sum of B channel from 🔴
+- Width from 🔴 (2x wider than the green border)
+- Height from 🔴
+- Probability of ✊ clustered
+- Probability of 🖐 disperse
+- Probability of 💧 drop wo cell
+- Probability of ❓ wo drop
+
+## Development
 
 Install the dependencies
 
