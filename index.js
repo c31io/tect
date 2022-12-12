@@ -193,18 +193,18 @@ function sideRectangles(rec) {
     return {
         left: {
             x: Math.round(x),
-            y: Math.round(y + height * 0.25),
-            width: Math.round(width * 0.25),
-            height: Math.round(height * 0.5)
+            y: Math.round(y),
+            width: Math.round(width * 0.5),
+            height: Math.round(height)
         },
         right: {
-            x: Math.round(x + width * 0.75),
-            y: Math.round(y + height * 0.25),
-            width: Math.round(width * 0.25),
-            height: Math.round(height * 0.5)
+            x: Math.round(x + width * 0.5),
+            y: Math.round(y),
+            width: Math.round(width * 0.5),
+            height: Math.round(height)
         },
-        width: Math.round(width * 0.25),
-        height: Math.round(height * 0.5)
+        width: Math.round(width * 0.5),
+        height: Math.round(height)
     }
 }
 
