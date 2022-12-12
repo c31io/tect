@@ -9,20 +9,22 @@ const tfnode = require('@tensorflow/tfjs-node')
 
 let curW = 102
 let curH = 122
-let factor
 
 function createWindow() {
-    factor = screen.getPrimaryDisplay().scaleFactor
+    if (screen.getPrimaryDisplay().scaleFactor != 1) {
+        Notification({
+            title: 'Error: display scaling detected',
+            body: 'Please turn it off, this app needs accurate coordinates'
+        }).show()
+        app.quit()
+    }
     const win = new BrowserWindow({
-        width: curW / factor,
-        height: curH / factor,
+        width: curW,
+        height: curH,
         frame: false,
         transparent: true,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            webPreferences: {
-                zoomFactor: 1.0 / factor
-            }
+            preload: path.join(__dirname, 'preload.js')
         }
     })
     win.loadFile('index.html')
@@ -30,7 +32,7 @@ function createWindow() {
     win.setFullScreenable(false)
     win.setHasShadow(false)
     win.setMinimizable(false)
-    win.setMinimumSize(102 / factor, 122 / factor)
+    win.setMinimumSize(102, 122)
 }
 
 
@@ -105,17 +107,17 @@ async function evaluate() {
             const img = fullScreen.crop(window.getBounds())
             const imgSize = img.getSize()
             const target = img.crop({
-                x: Math.round(1 / factor),
-                y: Math.round(21 / factor),
-                width: Math.round(imgSize.width - 2 / factor),
-                height: Math.round(imgSize.height - 22 / factor)
+                x: Math.round(1),
+                y: Math.round(21),
+                width: Math.round(imgSize.width - 2),
+                height: Math.round(imgSize.height - 22)
             })
             // Bitmap layout is not consistent across platforms.
             const du = target.resize({ width: modelImageSize, height: modelImageSize }).toBitmap()
             const ts = tf.tensor(du)
                 .reshape([-1, modelImageSize, modelImageSize, 4])
                 .slice([0, 0, 0, 0], [-1, modelImageSize, modelImageSize, 3])
-                .toFloat().reverse(3) // explained in the colorStat()
+                .toFloat().reverse(3) // explained in the sumRGB()
             // AI
             const predictions = model.predict(ts)
             const label = tf.argMax(predictions, 1).dataSync()[0]
@@ -152,16 +154,14 @@ function colorStat(_event, color) {
             const fullScreen = sources[0].thumbnail
             for (const window of BrowserWindow.getAllWindows()) {
                 // crop (width x2)
-                const wideBounds = wideRectangle(window.getBounds())
-                const img = fullScreen.crop(wideBounds)
-                const ts = tf.tensor(img.toBitmap())
-                    .reshape([-1, 4]) // ABGR
-                    .slice([0, 0], [-1, 3]).reverse(1) // RGB
-                    .toFloat().div(tf.scalar(255)) // RGB normalized
-                // sum RGBs
-                const s = ts.sum(0).dataSync()
+                const sideBounds = sideRectangles(window.getBounds())
+                const sumLeft = sumRGB(fullScreen.crop(sideBounds.left))
+                const sumRight = sumRGB(fullScreen.crop(sideBounds.right))
                 // write colorx: R,G,B,width,height
-                colorx[window.id] = [s[0], s[1], s[2], wideBounds.width, wideBounds.height]
+                colorx[window.id] = [
+                    sumLeft[0], sumLeft[1], sumLeft[2],
+                    sumRight[0], sumRight[1], sumRight[2],
+                    sideBounds.width, sideBounds.height]
                 // Show frames
                 window.webContents.send('set-frame', true)
                 window.webContents.send('check-icon', color)
@@ -171,17 +171,41 @@ function colorStat(_event, color) {
 }
 
 
-function wideRectangle(rec) {
-    x = rec.x + 1 / factor
-    y = rec.y + 21 / factor
-    width = rec.width - 2 / factor
-    height = rec.height - 22 / factor
-    x = x - (width / 2) / factor
+function sumRGB(img) {
+    return tf.tensor(img.toBitmap())
+        .reshape([-1, 4]) // ABGR
+        .slice([0, 0], [-1, 3]).reverse(1) // RGB
+        .toFloat().div(tf.scalar(255)) // normalize RGB
+        .sum(0).dataSync() // sum RGB
+}
+
+
+function sideRectangles(rec) {
+    // sensor
+    x = rec.x + 1
+    y = rec.y + 21
+    width = rec.width - 2
+    height = rec.height - 22
+    // wide sensor
+    x = x - (width / 2)
     width = width * 2
-    return { x: Math.round(x),
-        y: Math.round(y),
-        width: Math.round(width),
-        height: Math.round(height) }
+    // 2 small sensors
+    return {
+        left: {
+            x: Math.round(x),
+            y: Math.round(y + height * 0.25),
+            width: Math.round(width * 0.25),
+            height: Math.round(height * 0.5)
+        },
+        right: {
+            x: Math.round(x + width * 0.75),
+            y: Math.round(y + height * 0.25),
+            width: Math.round(width * 0.25),
+            height: Math.round(height * 0.5)
+        },
+        width: Math.round(width * 0.25),
+        height: Math.round(height * 0.5)
+    }
 }
 
 

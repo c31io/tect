@@ -36,15 +36,21 @@ Fields are seperated by commas.
 
 - Time when append in ISO format
 - Window ID
-- Sum of R channel from 🟩
-- Sum of G channel from 🟩
-- Sum of B channel from 🟩
-- Width from 🟩 (2x wider than the green border)
+- Sum of R channel from 🟩's left
+- Sum of G channel from 🟩's left
+- Sum of B channel from 🟩's left
+- Sum of R channel from 🟩's right
+- Sum of G channel from 🟩's right
+- Sum of B channel from 🟩's right
+- Width from 🟩 (0.5x width & height of the green border)
 - Height from 🟩
-- Sum of R channel from 🔴
-- Sum of G channel from 🔴
-- Sum of B channel from 🔴
-- Width from 🔴 (2x wider than the green border)
+- Sum of R channel from 🔴's left
+- Sum of G channel from 🔴's left
+- Sum of B channel from 🔴's left
+- Sum of R channel from 🔴's right
+- Sum of G channel from 🔴's right
+- Sum of B channel from 🔴's right
+- Width from 🔴 (0.5x width & height of the green border)
 - Height from 🔴
 - Probability of ✊ clustered
 - Probability of 🖐 disperse
