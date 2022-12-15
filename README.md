@@ -12,10 +12,12 @@
 
 - On click, the sensor border hides to capture a 2x wider view.
 - ✅ Done, click again to overwrite
+- Gamma correction: Q, E
 
 ### 🔴 Same, the maximum intensity is 1
 
 - ⭕ Same
+- Gamma correction: A, D
 
 ### 🤖 AI
 
@@ -42,16 +44,18 @@ Fields are seperated by commas.
 - Sum of R channel from 🟩's right
 - Sum of G channel from 🟩's right
 - Sum of B channel from 🟩's right
-- Width from 🟩 (0.5x width & height of the green border)
+- Width from 🟩 (same width & height of the green border)
 - Height from 🟩
+- Gamma used in 🟩
 - Sum of R channel from 🔴's left
 - Sum of G channel from 🔴's left
 - Sum of B channel from 🔴's left
 - Sum of R channel from 🔴's right
 - Sum of G channel from 🔴's right
 - Sum of B channel from 🔴's right
-- Width from 🔴 (0.5x width & height of the green border)
+- Width from 🔴 (same width & height of the green border)
 - Height from 🔴
+- Gamma used in 🔴
 - Probability of ✊ clustered
 - Probability of 🖐 disperse
 - Probability of 💧 drop wo cell

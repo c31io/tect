@@ -7,10 +7,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     colorStat: (x) => ipcRenderer.send('color-stat', x),
     selectFile: () => ipcRenderer.send('select-file'),
     saveFile: () => ipcRenderer.send('save-file'),
+    setGamma: (color, step) => ipcRenderer.send('set-gamma', color, step),
     updateLabel: (callback) => ipcRenderer.on('update-label', callback),
     checkIcon: (callback) => ipcRenderer.on('check-icon', callback),
     restoreIcons: (callback) => ipcRenderer.on('restore-icons', callback),
-    setFrame: (callback) => ipcRenderer.on('set-frame', callback)
+    setFrame: (callback) => ipcRenderer.on('set-frame', callback),
+    showGamma: (callback) => ipcRenderer.on('show-gamma', callback)
 })
 
 function setStyle(selector, property, value) {

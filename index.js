@@ -59,6 +59,7 @@ app.whenReady().then(() => {
     ipcMain.on('select-file', selectFile)
     ipcMain.on('save-file', saveFile)
     ipcMain.on('color-stat', colorStat)
+    ipcMain.on('set-gamma', setGamma)
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow()
@@ -132,16 +133,38 @@ async function evaluate() {
 
 let color1 = null
 let color2 = null
+let gamma1 = 1.0
+let gamma2 = 1.0
+
+function setGamma(_event, color, step) {
+    if (color == 1) {
+        if (gamma1 + step > 0.001) {
+            color1 = null
+            gamma1 = (Math.round((gamma1 + step) * 10)) / 10
+        }
+    } else {
+        if (gamma2 + step > 0.001) {
+            color2 = null
+            gamma2 = (Math.round((gamma2 + step) * 10)) / 10
+        }
+    }
+    for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send('show-gamma', gamma1, gamma2)
+    }
+}
 
 function colorStat(_event, color) {
-    let colorx
+    let colorx, gammax
     if (color == 1) {
         color1 = {}
         colorx = color1
+        gammax = gamma1
     } else {
         color2 = {}
         colorx = color2
+        gammax = gamma2
     }
+    if (color)
     for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send('set-frame', false)
     }
@@ -155,13 +178,13 @@ function colorStat(_event, color) {
             for (const window of BrowserWindow.getAllWindows()) {
                 // crop (width x2)
                 const sideBounds = sideRectangles(window.getBounds())
-                const sumLeft = sumRGB(fullScreen.crop(sideBounds.left))
-                const sumRight = sumRGB(fullScreen.crop(sideBounds.right))
+                const sumLeft = sumRGB(fullScreen.crop(sideBounds.left), gammax)
+                const sumRight = sumRGB(fullScreen.crop(sideBounds.right), gammax)
                 // write colorx: R,G,B,width,height
                 colorx[window.id] = [
                     sumLeft[0], sumLeft[1], sumLeft[2],
                     sumRight[0], sumRight[1], sumRight[2],
-                    sideBounds.width, sideBounds.height]
+                    sideBounds.width, sideBounds.height, gammax]
                 // Show frames
                 window.webContents.send('set-frame', true)
                 window.webContents.send('check-icon', color)
@@ -171,11 +194,12 @@ function colorStat(_event, color) {
 }
 
 
-function sumRGB(img) {
+function sumRGB(img, gamma) {
     return tf.tensor(img.toBitmap())
         .reshape([-1, 4]) // ABGR
         .slice([0, 0], [-1, 3]).reverse(1) // RGB
         .toFloat().div(tf.scalar(255)) // normalize RGB
+        .pow(tf.scalar(gamma)) // gamma correction
         .sum(0).dataSync() // sum RGB
 }
 

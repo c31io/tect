@@ -42,6 +42,24 @@ window.addEventListener('resize', () => {
     window.electronAPI.updateSize(window.outerWidth, window.outerHeight)
 })
 
+window.addEventListener('keypress', (event) => {
+    const step = 0.1
+    switch (event.key.toUpperCase()) {
+        case 'Q':
+            window.electronAPI.setGamma(1, -step)
+            break
+        case 'E':
+            window.electronAPI.setGamma(1, step)
+            break
+        case 'A':
+            window.electronAPI.setGamma(2, -step)
+            break
+        case 'D':
+            window.electronAPI.setGamma(2, step)
+            break
+    }
+})
+
 const labels = ['✊', '🖐', '💧', '❓']
 window.electronAPI.updateLabel((_event, label) => {
     replaceText('eval-btn', labels[label])
@@ -59,6 +77,22 @@ window.electronAPI.restoreIcons((_event) => {
     replaceText('col1-btn', '🟩')
     replaceText('col2-btn', '🔴')
     replaceText('eval-btn', '🤖')
+})
+
+let lock = 0
+window.electronAPI.showGamma((_event, gamma1, gamma2) => {
+    const g1 = gamma1.toFixed(1)
+    const g2 = gamma2.toFixed(1)
+    replaceText('col1-btn', g1)
+    replaceText('col2-btn', g2)
+    lock += 1
+    const myLock = lock
+    setTimeout(() => {
+        if (myLock == lock) {
+            replaceText('col1-btn', '🟩')
+            replaceText('col2-btn', '🔴')
+        }
+    }, 1000)
 })
 
 window.electronAPI.setFrame((_event, b) => {

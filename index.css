@@ -21,3 +21,11 @@ button {
     display: inline-block;
     font-size: 12px;
 }
+
+#col1-btn {
+    color: #77cc77FF;
+}
+
+#col2-btn {
+    color: #cc3333FF;
+}
