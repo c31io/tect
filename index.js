@@ -60,6 +60,7 @@ app.whenReady().then(() => {
     ipcMain.on('save-file', saveFile)
     ipcMain.on('color-stat', colorStat)
     ipcMain.on('set-gamma', setGamma)
+    ipcMain.on('color-bounds', colorBounds)
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow()
@@ -165,9 +166,9 @@ function colorStat(_event, color) {
         gammax = gamma2
     }
     if (color)
-    for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send('set-frame', false)
-    }
+        for (const window of BrowserWindow.getAllWindows()) {
+            window.webContents.send('set-frame', false)
+        }
     // Hide frames and take screen shot
     // Don't hide windows (Window animation)
     setTimeout(() => {
@@ -193,6 +194,15 @@ function colorStat(_event, color) {
     }, 200)
 }
 
+function colorBounds() {
+    const w = BrowserWindow.getFocusedWindow()
+    const oldBounds = w.getBounds()
+    const newBounds = sideRectangles(oldBounds).all
+    w.setBounds(newBounds)
+    setTimeout(() => {
+        w.setBounds(oldBounds)
+    }, 500)
+}
 
 function sumRGB(img, gamma) {
     return tf.tensor(img.toBitmap())
@@ -215,6 +225,12 @@ function sideRectangles(rec) {
     width = width * 2
     // 2 small sensors
     return {
+        all: {
+            x: Math.round(x - 1),
+            y: Math.round(y - 21),
+            width: Math.round(width + 2),
+            height: Math.round(height + 22)
+        },
         left: {
             x: Math.round(x),
             y: Math.round(y),

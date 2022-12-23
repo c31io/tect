@@ -24,8 +24,16 @@ col1Button.addEventListener('click', () => {
     window.electronAPI.colorStat(1)
 })
 
+col1Button.addEventListener('auxclick', () => {
+    window.electronAPI.colorBounds()
+})
+
 col2Button.addEventListener('click', () => {
     window.electronAPI.colorStat(2)
+})
+
+col2Button.addEventListener('auxclick', () => {
+    window.electronAPI.colorBounds()
 })
 
 function replaceText(selector, text) {

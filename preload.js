@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     evaluate: () => ipcRenderer.send('evaluate'),
     updateSize: (w, h) => ipcRenderer.send('update-size', w, h),
     colorStat: (x) => ipcRenderer.send('color-stat', x),
+    colorBounds: () => ipcRenderer.send('color-bounds'),
     selectFile: () => ipcRenderer.send('select-file'),
     saveFile: () => ipcRenderer.send('save-file'),
     setGamma: (color, step) => ipcRenderer.send('set-gamma', color, step),

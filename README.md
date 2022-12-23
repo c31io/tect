@@ -10,7 +10,8 @@
 
 ### 🟩 Get sums on each RGB channels
 
-- On click, the sensor border hides to capture a 2x wider view.
+- On click, the sensor border hides to capture a 2x wider view
+- On right click, show the captured view
 - ✅ Done, click again to overwrite
 - Gamma correction: Q, E
 
@@ -34,7 +35,7 @@
 
 ## CSV Schema
 
-Fields are seperated by commas.
+Fields are seperated by commas
 
 - Time when append in ISO format
 - Window ID
